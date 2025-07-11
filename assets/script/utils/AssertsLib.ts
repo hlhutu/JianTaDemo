@@ -15,26 +15,25 @@ export class AssertsLib {
         return this._instance;
     }
 
-    private enemySpriteAssertsPath: string = "mota/enemy.png";
     private frameWidth: number = 32;// 一个人物的宽高
     private frameHeight: number = 32;
     // 加载敌人图片
     public async loadEnemySpriteFrame(id:number): Promise<SpriteFrame> {
         return new Promise<SpriteFrame>((resolve, reject) => {
             // 加载原始素材
-            ResourceUtil.instance.loadAsset<Texture2D>(this.enemySpriteAssertsPath, Texture2D).then(res => {
+            ResourceUtil.instance.loadAsset("mota", "enemy").then(res => {
                 // 定位到目标位置，根据id定位
                 const x = 0 * this.frameWidth;
                 const y = id * this.frameHeight;
-                const spriteFrame = new SpriteFrame();
-                // 只显示这一位置
-                spriteFrame.texture = res;
+                const spriteFrame = res;
                 spriteFrame.rect = new Rect(x, y, this.frameWidth, this.frameHeight);
                 spriteFrame.offset = new Vec2(0, 0);
                 spriteFrame.originalSize = new Size(this.frameWidth, this.frameHeight);
                 // 返回结果
                 resolve(spriteFrame);
-            })
+            }).catch(e => {
+                reject(e);
+            });
         })
     }
 }

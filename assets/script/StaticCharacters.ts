@@ -16,6 +16,8 @@ export class StaticCharacters extends Component {
         AssertsLib.instance.loadEnemySpriteFrame(e.enemyId).then(r => {
             const currentSprite: Sprite = this.getComponent(Sprite);
             currentSprite.spriteFrame = r;
+        }).catch(err => {
+            console.error(err);
         })
     }
 

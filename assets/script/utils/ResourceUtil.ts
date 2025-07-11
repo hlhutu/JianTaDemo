@@ -1,4 +1,4 @@
-import { Asset, assetManager, resources } from "cc";
+import { SpriteFrame, Asset, assetManager, resources } from "cc";
 
 /**
  * ResourceUtil.ts
@@ -36,44 +36,50 @@ export class ResourceUtil {
 
     /**
      * 加载资源
-     * @param path 资源在 resources 目录下的路径 (不包含扩展名)
+     * @param dir
+     * @param name 资源在 resources 目录下的路径 (不包含扩展名)
      * @param type 资源的类型 (例: SpriteFrame, Prefab, AudioClip)
      * @returns 返回一个 Promise，该 Promise 在加载成功后会 resolve 对应的资源实例
      */
-    public loadAsset<T extends Asset>(path: string, type: typeof Asset): Promise<T> {
+    public loadAsset(dir: string, name: string): Promise<SpriteFrame> {
+        const path = dir+"/"+name;
         // --- 1. 优先从已加载缓存中获取 ---
         if (this._assetCache.has(path)) {
             // console.log(`[ResourceManager] 从缓存中获取资源: ${path}`);
-            const asset = this._assetCache.get(path) as T;
+            const asset = this._assetCache.get(path) as SpriteFrame;
             return Promise.resolve(asset);
         }
 
         // --- 2. 如果缓存中没有，检查是否正在加载中 ---
         if (this._loadingPromises.has(path)) {
             // console.log(`[ResourceManager] 等待正在加载的资源: ${path}`);
-            return this._loadingPromises.get(path) as Promise<T>;
+            return this._loadingPromises.get(path) as Promise<SpriteFrame>;
         }
 
         // --- 3. 如果既没加载过，也没在加载中，则发起新的加载 ---
         // console.log(`[ResourceManager] 发起新的资源加载: ${path}`);
-        const loadPromise = new Promise<T>((resolve, reject) => {
-            resources.load(path, type, (err, asset) => {
+        const loadPromise = new Promise<SpriteFrame>((resolve, reject) => {
+            resources.loadDir(dir, SpriteFrame, (err, assets) => {
                 if (err) {
-                    console.error(`[ResourceManager] 资源加载失败: ${path}`, err);
-                    // 加载失败，从加载中队列移除
-                    this._loadingPromises.delete(path);
                     reject(err);
                     return;
                 }
-
-                // 加载成功，存入缓存
-                this._assetCache.set(path, asset);
-                // 从加载中队列移除
-                this._loadingPromises.delete(path);
-
-                // console.log(`[ResourceManager] 资源加载成功: ${path}`);
-                resolve(asset as T);
-            });
+                let target: SpriteFrame = null; // 最终的目标
+                assets.forEach((asset) => {
+                    // 所有数据存入缓存
+                    this._assetCache.set(dir+"/"+asset.name, asset);
+                    // 从加载中队列移除
+                    this._loadingPromises.delete(dir+"/"+asset.name);
+                    if(asset.name==name) {
+                        target = asset;
+                    }
+                })
+                if (target) {
+                    resolve(target);
+                }else {
+                    reject(new Error(`目录${dir}存在，但资源${path}不存在`))
+                }
+            })
         });
 
         // 将这个新的加载Promise存入“正在加载”的缓存中

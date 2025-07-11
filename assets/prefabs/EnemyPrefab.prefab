@@ -310,20 +310,6 @@
     "__prefab": {
       "__id__": 13
     },
-    "spriteSheetTexture": {
-      "__uuid__": "8b6ef18e-7bb7-462b-adba-2d0a2894f1c2@6c48a",
-      "__expectedType__": "cc.Texture2D"
-    },
-    "spriteSheetSize": {
-      "__type__": "cc.Size",
-      "width": 4,
-      "height": 64
-    },
-    "targetPos": {
-      "__type__": "cc.Size",
-      "width": 0,
-      "height": 0
-    },
     "_id": ""
   },
   {
