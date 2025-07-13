@@ -19,6 +19,9 @@ export class EnemyManager extends Component {
     @property({ type: [Node], tooltip: "后排4个位置节点" })
     backRowPositions: Node[] = [];
 
+    // 存放位置和角色脚本的对应关系
+    private enemyMap: Map<string, StaticCharacters> = new Map();
+
     // --- 改变的逻辑 ---
 
     onLoad() {
@@ -39,19 +42,18 @@ export class EnemyManager extends Component {
      */
     public spawnEnemy(id: number) {
         // 1. 找到一个可用的位置节点
-        const availablePositionNode = this.findAvailablePosition();
+        const nodeWrapper = this.findAvailablePosition();
 
-        if (!availablePositionNode) {
+        if (!nodeWrapper) {
             console.warn("没有可用的敌人位置了！");
             return;
         }
 
         // 2. 实例化敌人
         const enemyNode = instantiate(this.enemyPrefab);
-
-        // 3. 将敌人节点添加到“位置标记节点”下
-        // 这是一种很巧妙的方法，让敌人的坐标系和位置标记绑定
-        availablePositionNode.addChild(enemyNode);
+        // 3. 记录位置和脚本的关西
+        this.enemyMap[nodeWrapper.key] = enemyNode.getComponent(StaticCharacters)
+        nodeWrapper.node.addChild(enemyNode);// 添加敌人prefab
         // 把敌人在其父节点（位置标记节点）中的位置设置为原点
         enemyNode.setPosition(Vec3.ZERO);
 
@@ -66,18 +68,25 @@ export class EnemyManager extends Component {
      * 查找一个空闲的位置节点 (优先找前排)
      * @returns 返回一个没有子节点的空位置节点，如果没有则返回null
      */
-    private findAvailablePosition(): Node | null {
+    private findAvailablePosition(): NodeWrapper | null {
         // 优先遍历前排位置
-        for (const pos of this.frontRowPositions) {
-            if (pos.children.length === 0) {
-                return pos; // 找到空位，返回它
+        for (const i in this.frontRowPositions) {
+            const pos = this.frontRowPositions[i];
+            if (pos.children.length === 0) {// 没有子元素
+                return {
+                    node: pos,
+                    key: "Front"+i
+                }; // 找到空位，返回它
             }
         }
-
         // 如果前排满了，再遍历后排位置
-        for (const pos of this.backRowPositions) {
+        for (const i in this.backRowPositions) {
+            const pos = this.backRowPositions[i];
             if (pos.children.length === 0) {
-                return pos; // 找到空位，返回它
+                return {
+                    node: pos,
+                    key: "Back"+i
+                }; // 找到空位，返回它
             }
         }
 
@@ -94,5 +103,20 @@ export class EnemyManager extends Component {
         for (const pos of this.backRowPositions) {
             pos.removeAllChildren();
         }
+        // 清理map
+        this.enemyMap = new Map();
     }
+
+    public damage(location :string, hp:number) {
+        if(this.enemyMap[location]!=null) {
+            this.enemyMap[location].damage(hp)
+        }else {
+            console.error("Enemy not found in "+location)
+        }
+    }
+}
+
+class NodeWrapper {
+    public node: Node;
+    public key: string;
 }

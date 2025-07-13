@@ -36,4 +36,23 @@ export class AssertsLib {
             });
         })
     }
+
+    public async loadHeroSpriteFrame(): Promise<SpriteFrame> {
+        return new Promise<SpriteFrame>((resolve, reject) => {
+            // 加载原始素材
+            ResourceUtil.instance.loadAsset("mota", "hero").then(res => {
+                // 定位到目标位置，根据id定位
+                const x = 0 * this.frameWidth;
+                const y = 0 * this.frameHeight;
+                const spriteFrame = res;
+                spriteFrame.rect = new Rect(x, y, this.frameWidth, this.frameHeight);
+                spriteFrame.offset = new Vec2(0, 0);
+                spriteFrame.originalSize = new Size(this.frameWidth, this.frameHeight);
+                // 返回结果
+                resolve(spriteFrame);
+            }).catch(e => {
+                reject(e);
+            });
+        })
+    }
 }
